@@ -1,6 +1,6 @@
 # HEPTutorial: CMS Data Analysis Exercises
 
-## Overview
+_## Overview
 
 This project is a High Energy Physics (HEP) analysis tutorial based on CMS-like data and Monte Carlo simulations. It is designed for learning and practicing data analysis techniques commonly used in particle physics, using the ROOT framework and C++.
 
@@ -45,10 +45,11 @@ The main purpose of this repository is **learning**. By working through the prov
 ## Exercises
 
 Each branch corresponds to a specific exercise, such as:
-- Muon multiplicity and invariant mass analysis
-- Electron selection
-- Jet counting and b-tagging
-- ...and more
+- Muon multiplicity and invariant mass analysis (exercise 1)
+- Properties of top quark events (exercise 2)
+- Cross-section of top quark productiong (exercise 3)
+- Top quark mass reconstruction (exercise 4)
+
 
 Follow the instructions in each branch to complete the exercise and learn the relevant analysis techniques.
 
