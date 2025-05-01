@@ -1,17 +1,21 @@
 # HEPTutorial: CMS Data Analysis Exercises
 
-_## Overview
+## Overview
 
-This project is a High Energy Physics (HEP) analysis tutorial based on CMS-like data and Monte Carlo simulations. It is designed for learning and practicing data analysis techniques commonly used in particle physics, using the ROOT framework and C++.
+This project is a High Energy Physics (HEP) analysis tutorial inspired by CMS data and Monte Carlo simulations. It offers a practical, hands-on approach to learning data analysis techniques commonly used in particle physics, leveraging the ROOT framework and C++.
+
+> **This tutorial is based on the official [CMS HEP Tutorial by IPPOG](https://ippog.org/ippog_resource_database/cms-hep-tutorial), which I am using for self-study and learning.**
 
 ## Purpose
 
-The main purpose of this repository is **learning**. By working through the provided exercises, you will:
-- Understand the structure of HEP data analysis code.
-- Learn how to select and analyze physics objects (muons, electrons, jets, etc.).
-- Practice filling and plotting histograms.
-- Compare real data with Monte Carlo simulations.
-- Gain experience with modular C++ code and the ROOT analysis framework.
+The primary goal of this repository is to facilitate **learning** and **knowledge sharing**. By completing the exercises, you will:
+- Understand the structure and workflow of HEP data analysis.
+- Learn how to select and analyze physics objects such as muons, electrons, and jets.
+- Practice creating, filling, and visualizing histograms.
+- Compare experimental data with Monte Carlo simulations.
+- Develop skills in modular C++ programming and the ROOT analysis framework.
+
+This repository is designed for personal learning purposes and encourages experimentation and sharing of ideas.
 
 ## Structure
 
@@ -47,9 +51,8 @@ The main purpose of this repository is **learning**. By working through the prov
 Each branch corresponds to a specific exercise, such as:
 - Muon multiplicity and invariant mass analysis (exercise 1)
 - Properties of top quark events (exercise 2)
-- Cross-section of top quark productiong (exercise 3)
+- Cross-section of top quark production (exercise 3)
 - Top quark mass reconstruction (exercise 4)
-
 
 Follow the instructions in each branch to complete the exercise and learn the relevant analysis techniques.
 
