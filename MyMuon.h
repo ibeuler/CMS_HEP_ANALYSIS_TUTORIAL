@@ -20,7 +20,8 @@ class MyMuon: public TLorentzVector {
       }
       ;
       virtual ~MyMuon();
-
+	 
+	
       void SetIsolation(double x) {
          isolation = x;
       }
@@ -46,11 +47,12 @@ class MyMuon: public TLorentzVector {
       }
       ;
 
-   private:
 
       double isolation;
       int charge;
 
 };
 
+
+    
 #endif /* MYMUON_H_ */
