@@ -1,0 +1,590 @@
+Script started on 2025-03-24 00:07:13+03:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="92" LINES="22"]
+done. CLA, CLA_compile,... are now available.
+But, IPython is not installed. You might want to install it if you want to use jupiter notebooks.
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ ls
+[?2004lexample.C  Makefile      MyElectron.C   MyJet.C    MyMuon.C    MyPhoton.h  Plotter.o
+example.o  MyAnalysis.C  MyElectron.h   MyJet.h    MyMuon.h    MyPhoton.o  results_MC.pdf
+[0m[01;32mexample.x[0m  MyAnalysis.h  MyElectron.o   MyJet.o    MyMuon.o    Plotter.C   results.pdf
+[01;34mfiles[0m      MyAnalysis.o  myhistory.log  mylog.txt  MyPhoton.C  Plotter.h
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ cat E[Kexample.C
+[?2004l#include "MyAnalysis.h"
+#include "Plotter.h"
+#include <iostream>
+#include <TChain.h>
+#include <TGraphAsymmErrors.h>
+#include <string>
+
+int main() {
+   
+   float lumi = 50.;
+   
+   MyAnalysis *A = new MyAnalysis();
+   TChain* ch = new TChain("events");
+   ch->Add("files/data.root");
+   ch->Process(A);
+   
+   MyAnalysis *B = new MyAnalysis();
+   TChain* ch2 = new TChain("events");
+   ch2->Add("files/ttbar.root");
+   ch2->Process(B);
+   
+   MyAnalysis *C = new MyAnalysis();
+   TChain* ch3 = new TChain("events");
+   ch3->Add("files/wjets.root");
+   ch3->Process(C);
+   
+   MyAnalysis *D = new MyAnalysis();
+   TChain* ch4 = new TChain("events");
+   ch4->Add("files/dy.root");
+   ch4->Process(D);
+   
+   MyAnalysis *E = new MyAnalysis();
+   TChain* ch5 = new TChain("events");
+   ch5->Add("files/ww.root");
+   ch5->Process(E);
+
+   MyAnalysis *F = new MyAnalysis();
+   TChain* ch6 = new TChain("events");
+   ch6->Add("files/wz.root");
+   ch6->Process(F);
+
+   MyAnalysis *G = new MyAnalysis();
+   TChain* ch7 = new TChain("events");
+   ch7->Add("files/zz.root");
+   ch7->Process(G);
+
+   MyAnalysis *H = new MyAnalysis();
+   TChain* ch8 = new TChain("events");
+   ch8->Add("files/qcd.root");
+   ch8->Process(H);
+   
+   MyAnalysis *I = new MyAnalysis();
+   TChain* ch9 = new TChain("events");
+   ch9->Add("files/single_top.root");
+   ch9->Process(I);
+
+	Plotter P;
+	P.SetData(A->histograms, std::string("Data"));
+	P.AddBg(B->histograms, std::string("TTbar"));
+	P.AddBg(C->histograms, std::string("Wjets"));
+	P.AddBg(D->histograms, std::string("DY"));
+	P.AddBg(E->histograms, std::string("WW"));
+	P.AddBg(F->histograms, std::string("WZ"));
+	P.AddBg(G->histograms, std::string("ZZ"));
+	P.AddBg(H->histograms, std::string("QCD"));
+	P.AddBg(I->histograms, std::string("single Top"));
+   
+	P.Plot(string("results.pdf"));
+   
+	Plotter P_MC;
+	P_MC.AddBg(B->histograms_MC, std::string("TTbar"));
+	P_MC.AddBg(C->histograms_MC, std::string("Wjets"));
+	P_MC.AddBg(D->histograms_MC, std::string("DY"));
+	P_MC.AddBg(E->histograms_MC, std::string("WW"));
+	P_MC.AddBg(F->histograms_MC, std::string("WZ"));
+	P_MC.AddBg(G->histograms_MC, std::string("ZZ"));
+	P_MC.AddBg(H->histograms_MC, std::string("QCD"));
+	P_MC.AddBg(I->histograms_MC, std::string("single Top"));
+   P_MC.Plot(string("results_MC.pdf"));
+
+}
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ cat example.h[K[K[K[K[K[K[K[K[KMyAnalysis.C
+[?2004l#define MyAnalysis_cxx
+// The class definition in MyAnalysis.h has been generated automatically
+// by the ROOT utility TTree::MakeSelector(). This class is derived
+// from the ROOT class TSelector. For more information on the TSelector
+// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
+
+// The following methods are defined in this file:
+//    Begin():        called every time a loop on the tree starts,
+//                    a convenient place to create your histograms.
+//    SlaveBegin():   called after Begin(), when on PROOF called only on the
+//                    slave servers.
+//    Process():      called for each event, in this function you decide what
+//                    to read and fill your histograms.
+//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+//                    called only on the slave servers.
+//    Terminate():    called at the end of the loop on the tree,
+//                    a convenient place to draw/fit your histograms.
+//
+// To use this file, try the following session on your Tree T:
+//
+// Root > T->Process("MyAnalysis.C")
+// Root > T->Process("MyAnalysis.C","some options")
+// Root > T->Process("MyAnalysis.C+")
+//
+
+#include "MyAnalysis.h"
+#include <iostream>
+#include <TH1F.h>
+#include <TLatex.h>
+
+using namespace std;
+
+void MyAnalysis::BuildEvent() {
+   
+   Muons.clear();
+   for (int i = 0; i < NMuon; ++i) {
+      MyMuon muon(Muon_Px[i], Muon_Py[i], Muon_Pz[i], Muon_E[i]);
+      muon.SetIsolation(Muon_Iso[i]);
+      muon.SetCharge(Muon_Charge[i]);
+      Muons.push_back(muon);
+   }
+   
+   Electrons.clear();
+   for (int i = 0; i < NElectron; ++i) {
+      MyElectron electron(Electron_Px[i], Electron_Py[i], Electron_Pz[i], Electron_E[i]);
+      electron.SetIsolation(Electron_Iso[i]);
+      electron.SetCharge(Electron_Charge[i]);
+      Electrons.push_back(electron);
+   }
+   
+   Photons.clear();
+   for (int i = 0; i < NPhoton; ++i) {
+      MyPhoton photon(Photon_Px[i], Photon_Py[i], Photon_Pz[i], Photon_E[i]);
+      photon.SetIsolation(Photon_Iso[i]);
+      Photons.push_back(photon);
+   }
+   
+   Jets.clear();
+   for (int i = 0; i < NJet; ++i) {
+      MyJet jet(Jet_Px[i], Jet_Py[i], Jet_Pz[i], Jet_E[i]);
+      jet.SetBTagDiscriminator(Jet_btag[i]);
+      jet.SetJetID(Jet_ID[i]);
+      Jets.push_back(jet);
+   }
+   
+   hadB.SetXYZM(MChadronicBottom_px, MChadronicBottom_py, MChadronicBottom_pz, 4.8);
+   lepB.SetXYZM(MCleptonicBottom_px, MCleptonicBottom_py, MCleptonicBottom_pz, 4.8);
+   hadWq.SetXYZM(MChadronicWDecayQuark_px, MChadronicWDecayQuark_py, MChadronicWDecayQuark_pz, 0.0);
+   hadWqb.SetXYZM(MChadronicWDecayQuarkBar_px, MChadronicWDecayQuarkBar_py, MChadronicWDecayQuarkBar_pz, 0.0);
+   lepWl.SetXYZM(MClepton_px, MClepton_py, MClepton_pz, 0.0);
+   lepWn.SetXYZM(MCneutrino_px, MCneutrino_py, MCneutrino_pz, 0.0);
+   met.SetXYZM(MET_px, MET_py, 0., 0.);
+   
+   EventWeight *= weight_factor;
+   
+}
+
+void MyAnalysis::Begin(TTree * /*tree*/) {
+   // The Begin() function is called at the start of the query.
+   // When running with PROOF Begin() is only called on the client.
+   // The tree argument is deprecated (on PROOF 0 is passed).
+   
+   TString option = GetOption();
+   
+}
+
+void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
+   // The SlaveBegin() function is called after the Begin() function.
+   // When running with PROOF SlaveBegin() is called on each slave server.
+   // The tree argument is deprecated (on PROOF 0 is passed).
+   
+   TString option = GetOption();
+   
+   h_Mmumu = new TH1F("Mmumu", "Invariant di-muon mass", 60, 60, 120);
+   h_Mmumu->SetXTitle("m_{#mu#mu}");
+   h_Mmumu->Sumw2();
+   histograms.push_back(h_Mmumu);
+   histograms_MC.push_back(h_Mmumu);
+   
+   h_NMuon = new TH1F("NMuon", "Number of muons", 7, 0, 7);
+   h_NMuon->SetXTitle("No. Muons");
+   h_NMuon->Sumw2();
+   histograms.push_back(h_NMuon);
+   histograms_MC.push_back(h_NMuon);
+   
+}
+
+Bool_t MyAnalysis::Process(Long64_t entry) {
+   // The Process() function is called for each entry in the tree (or possibly
+   // keyed object in the case of PROOF) to be processed. The entry argument
+   // specifies which entry in the currently loaded tree is to be processed.
+   // It can be passed to either MyAnalysis::GetEntry() or TBranch::GetEntry()
+   // to read either all or the required parts of the data. When processing
+   // keyed objects with PROOF, the object is already loaded and is available
+   // via the fObject pointer.
+   //
+   // This function should contain the "body" of the analysis. It can contain
+   // simple or elaborate selection criteria, run algorithms on the data
+   // of the event and typically fill histograms.
+   //
+   // The processing can be stopped by calling Abort().
+   //
+   // Use fStatus to set the return value of TTree::Process().
+   //
+   // The return value is currently not used.
+   
+   ++TotalEvents;
+   
+   GetEntry(entry);
+   
+   if (TotalEvents % 10000 == 0)
+      cout << "Next event -----> " << TotalEvents << endl;
+   
+   BuildEvent();
+   
+   double MuonPtCut = 25.;
+   double MuonRelIsoCut = 0.10;
+   
+   //   cout << "Jets: " << endl;
+   //   for (vector<MyJet>::iterator it = Jets.begin(); it != Jets.end(); ++it) {
+   //      cout << "pt, eta, phi, btag, id: " << it->Pt() << ", " << it->Eta() << ", " << it->Phi() << ", " << it->IsBTagged() << ", " << it->GetJetID()
+   //      << endl;
+   //   }
+   //   cout << "Muons: " << endl;
+   //   for (vector<MyMuon>::iterator it = Muons.begin(); it != Muons.end(); ++it) {
+   //      cout << "pt, eta, phi, iso, charge: " << it->Pt() << ", " << it->Eta() << ", " << it->Phi() << ", "
+   //      << it->GetIsolation() << ", " << it->GetCharge() << endl;
+   //   }
+   //   cout << "Electrons: " << endl;
+   //   for (vector<MyElectron>::iterator it = Electrons.begin(); it != Electrons.end(); ++it) {
+   //      cout << "pt, eta, phi, iso, charge: " << it->Pt() << ", " << it->Eta() << ", " << it->Phi() << ", "
+   //      << it->GetIsolation() << ", " << it->GetCharge() << endl;
+   //   }
+   //   cout << "Photons: " << endl;
+   //   for (vector<MyPhoton>::iterator it = Photons.begin(); it != Photons.end(); ++it) {
+   //      cout << "pt, eta, phi, iso: " << it->Pt() << ", " << it->Eta() << ", " << it->Phi() << ", " << it->GetIsolation()
+   //      << endl;
+   //   }
+   
+   
+   //////////////////////////////
+   // Exercise 1: Invariant Di-Muon mass
+   
+   int N_IsoMuon = 0;
+   MyMuon *muon1, *muon2;
+   
+   for (vector<MyMuon>::iterator jt = Muons.begin(); jt != Muons.end(); ++jt) {
+      if (jt->IsIsolated(MuonRelIsoCut)) {
+         ++N_IsoMuon;
+         if (N_IsoMuon == 1) muon1 = &(*jt);
+         if (N_IsoMuon == 2) muon2 = &(*jt);
+      }
+   }
+   
+   h_NMuon->Fill(N_IsoMuon, EventWeight);
+   
+   if (N_IsoMuon > 1 && triggerIsoMu24) {
+      if (muon1->Pt()>MuonPtCut) {
+         h_Mmumu->Fill((*muon1 + *muon2).M(), EventWeight);
+      }
+   }
+   //////////////////////////////
+   
+   return kTRUE;
+}
+
+void MyAnalysis::SlaveTerminate() {
+   // The SlaveTerminate() function is called after all entries or objects
+   // have been processed. When running with PROOF SlaveTerminate() is called
+   // on each slave server.
+   
+}
+
+void MyAnalysis::Terminate() {
+   // The Terminate() function is the last function to be called during
+   // a query. It always runs on the client, it can be used to present
+   // the results graphically or save the results to file.
+   
+}
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ cat MyAnalysis.C[Kh
+[?2004l//////////////////////////////////////////////////////////
+// This class has been automatically generated on
+// Wed Feb  1 07:53:21 2012 by ROOT version 5.32/00
+// from TTree data/
+// found on file: data.root
+//////////////////////////////////////////////////////////
+
+#ifndef MyAnalysis_h
+#define MyAnalysis_h
+
+#include <TROOT.h>
+#include <TFile.h>
+#include <TChain.h>
+#include <TSelector.h>
+#include <TH1F.h>
+#include <TLorentzVector.h>
+#include <vector>
+
+#include "MyJet.h"
+#include "MyMuon.h"
+#include "MyElectron.h"
+#include "MyPhoton.h"
+
+using namespace std;
+
+// Header file for the classes stored in the TTree if any.
+
+// Fixed size dimensions of array or collections stored in the TTree if any.
+
+class MyAnalysis: public TSelector {
+public:
+   TTree *fChain; //!pointer to the analyzed TTree or TChain
+   
+   // Declaration of leaf types
+   Int_t NJet;
+   Float_t Jet_Px[10]; //[NJet]
+   Float_t Jet_Py[10]; //[NJet]
+   Float_t Jet_Pz[10]; //[NJet]
+   Float_t Jet_E[10]; //[NJet]
+   Float_t Jet_btag[10]; //[NJet]
+   Float_t Jet_ID[10]; //[NJet]
+   Int_t NMuon;
+   Float_t Muon_Px[5]; //[NMuon]
+   Float_t Muon_Py[5]; //[NMuon]
+   Float_t Muon_Pz[5]; //[NMuon]
+   Float_t Muon_E[5]; //[NMuon]
+   Int_t Muon_Charge[5]; //[NMuon]
+   Float_t Muon_Iso[5]; //[NMuon]
+   Int_t NElectron;
+   Float_t Electron_Px[5]; //[NElectron]
+   Float_t Electron_Py[5]; //[NElectron]
+   Float_t Electron_Pz[5]; //[NElectron]
+   Float_t Electron_E[5]; //[NElectron]
+   Int_t Electron_Charge[5]; //[NElectron]
+   Float_t Electron_Iso[5]; //[NElectron]
+   Int_t NPhoton;
+   Float_t Photon_Px[5]; //[NPhoton]
+   Float_t Photon_Py[5]; //[NPhoton]
+   Float_t Photon_Pz[5]; //[NPhoton]
+   Float_t Photon_E[5]; //[NPhoton]
+   Float_t Photon_Iso[5]; //[NPhoton]
+   Float_t MET_px;
+   Float_t MET_py;
+   Float_t MChadronicBottom_px;
+   Float_t MChadronicBottom_py;
+   Float_t MChadronicBottom_pz;
+   Float_t MCleptonicBottom_px;
+   Float_t MCleptonicBottom_py;
+   Float_t MCleptonicBottom_pz;
+   Float_t MChadronicWDecayQuark_px;
+   Float_t MChadronicWDecayQuark_py;
+   Float_t MChadronicWDecayQuark_pz;
+   Float_t MChadronicWDecayQuarkBar_px;
+   Float_t MChadronicWDecayQuarkBar_py;
+   Float_t MChadronicWDecayQuarkBar_pz;
+   Float_t MClepton_px;
+   Float_t MClepton_py;
+   Float_t MClepton_pz;
+   Int_t MCleptonPDGid;
+   Float_t MCneutrino_px;
+   Float_t MCneutrino_py;
+   Float_t MCneutrino_pz;
+   Int_t NPrimaryVertices;
+   Bool_t triggerIsoMu24;
+   Float_t EventWeight;
+   
+   // List of branches
+   TBranch *b_NJet; //!
+   TBranch *b_Jet_Px; //!
+   TBranch *b_Jet_Py; //!
+   TBranch *b_Jet_Pz; //!
+   TBranch *b_Jet_E; //!
+   TBranch *b_Jet_btag; //!
+   TBranch *b_Jet_ID; //!
+   TBranch *b_NMuon; //!
+   TBranch *b_Muon_Px; //!
+   TBranch *b_Muon_Py; //!
+   TBranch *b_Muon_Pz; //!
+   TBranch *b_Muon_E; //!
+   TBranch *b_Muon_Charge; //!
+   TBranch *b_Muon_Iso; //!
+   TBranch *b_NElectron; //!
+   TBranch *b_Electron_Px; //!
+   TBranch *b_Electron_Py; //!
+   TBranch *b_Electron_Pz; //!
+   TBranch *b_Electron_E; //!
+   TBranch *b_Electron_Charge; //!
+   TBranch *b_Electron_Iso; //!
+   TBranch *b_NPhoton; //!
+   TBranch *b_Photon_Px; //!
+   TBranch *b_Photon_Py; //!
+   TBranch *b_Photon_Pz; //!
+   TBranch *b_Photon_E; //!
+   TBranch *b_Photon_Iso; //!
+   TBranch *b_MET_px; //!
+   TBranch *b_MET_py; //!
+   TBranch *b_MChadronicBottom_px; //!
+   TBranch *b_MChadronicBottom_py; //!
+   TBranch *b_MChadronicBottom_pz; //!
+   TBranch *b_MCleptonicBottom_px; //!
+   TBranch *b_MCleptonicBottom_py; //!
+   TBranch *b_MCleptonicBottom_pz; //!
+   TBranch *b_MChadronicWDecayQuark_px; //!
+   TBranch *b_MChadronicWDecayQuark_py; //!
+   TBranch *b_MChadronicWDecayQuark_pz; //!
+   TBranch *b_MChadronicWDecayQuarkBar_px; //!
+   TBranch *b_MChadronicWDecayQuarkBar_py; //!
+   TBranch *b_MChadronicWDecayQuarkBar_pz; //!
+   TBranch *b_MClepton_px; //!
+   TBranch *b_MClepton_py; //!
+   TBranch *b_MClepton_pz; //!
+   TBranch *b_MCleptonPDGid; //!
+   TBranch *b_MCneutrino_px; //!
+   TBranch *b_MCneutrino_py; //!
+   TBranch *b_MCneutrino_pz; //!
+   TBranch *b_NPrimaryVertices; //!
+   TBranch *b_triggerIsoMu24; //!
+   TBranch *b_EventWeight; //!
+   
+   MyAnalysis(float sf = 1., float wf = 1, TTree * /*tree*/= 0) :
+   fChain(0) {
+      weight_factor = wf;
+      SF_b = sf;
+   }
+   virtual ~MyAnalysis() {
+   }
+   virtual Int_t Version() const {
+      return 2;
+   }
+   virtual void Begin(TTree *tree);
+   virtual void SlaveBegin(TTree *tree);
+   virtual void Init(TTree *tree);
+   virtual Bool_t Notify();
+   virtual Bool_t Process(Long64_t entry);
+   virtual Int_t GetEntry(Long64_t entry, Int_t getall = 0) {
+      return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0;
+   }
+   virtual void SetOption(const char *option) {
+      fOption = option;
+   }
+   virtual void SetObject(TObject *obj) {
+      fObject = obj;
+   }
+   virtual void SetInputList(TList *input) {
+      fInput = input;
+   }
+   virtual TList *GetOutputList() const {
+      return fOutput;
+   }
+   virtual void SlaveTerminate();
+   virtual void Terminate();
+   
+   void BuildEvent();
+   
+   int TotalEvents;
+   vector<MyJet> Jets;
+   vector<MyMuon> Muons;
+   vector<MyElectron> Electrons;
+   vector<MyPhoton> Photons;
+   
+   TLorentzVector hadB, lepB, hadWq, hadWqb, lepWl, lepWn;
+   TLorentzVector met;
+   
+   float weight_factor;
+   float SF_b;
+   
+   TH1F *h_Mmumu;
+   TH1F *h_NMuon;
+   
+   vector<TH1F*> histograms;
+   vector<TH1F*> histograms_MC;
+   
+};
+
+#endif
+
+#ifdef MyAnalysis_cxx
+void MyAnalysis::Init(TTree *tree)
+{
+   // The Init() function is called when the selector needs to initialize
+   // a new tree or chain. Typically here the branch addresses and branch
+   // pointers of the tree will be set.
+   // It is normally not necessary to make changes to the generated
+   // code, but the routine can be extended by the user if needed.
+   // Init() will be called many times when running on PROOF
+   // (once per file to be processed).
+   
+   // Set branch addresses and branch pointers
+   if (!tree) return;
+   fChain = tree;
+   fChain->SetMakeClass(1);
+   
+   fChain->SetBranchAddress("NJet", &NJet, &b_NJet);
+   fChain->SetBranchAddress("Jet_Px", Jet_Px, &b_Jet_Px);
+   fChain->SetBranchAddress("Jet_Py", Jet_Py, &b_Jet_Py);
+   fChain->SetBranchAddress("Jet_Pz", Jet_Pz, &b_Jet_Pz);
+   fChain->SetBranchAddress("Jet_E", Jet_E, &b_Jet_E);
+   fChain->SetBranchAddress("Jet_btag", Jet_btag, &b_Jet_btag);
+   fChain->SetBranchAddress("Jet_ID", Jet_ID, &b_Jet_ID);
+   fChain->SetBranchAddress("NMuon", &NMuon, &b_NMuon);
+   fChain->SetBranchAddress("Muon_Px", Muon_Px, &b_Muon_Px);
+   fChain->SetBranchAddress("Muon_Py", Muon_Py, &b_Muon_Py);
+   fChain->SetBranchAddress("Muon_Pz", Muon_Pz, &b_Muon_Pz);
+   fChain->SetBranchAddress("Muon_E", Muon_E, &b_Muon_E);
+   fChain->SetBranchAddress("Muon_Charge", Muon_Charge, &b_Muon_Charge);
+   fChain->SetBranchAddress("Muon_Iso", Muon_Iso, &b_Muon_Iso);
+   fChain->SetBranchAddress("NElectron", &NElectron, &b_NElectron);
+   fChain->SetBranchAddress("Electron_Px", Electron_Px, &b_Electron_Px);
+   fChain->SetBranchAddress("Electron_Py", Electron_Py, &b_Electron_Py);
+   fChain->SetBranchAddress("Electron_Pz", Electron_Pz, &b_Electron_Pz);
+   fChain->SetBranchAddress("Electron_E", Electron_E, &b_Electron_E);
+   fChain->SetBranchAddress("Electron_Charge", Electron_Charge, &b_Electron_Charge);
+   fChain->SetBranchAddress("Electron_Iso", Electron_Iso, &b_Electron_Iso);
+   fChain->SetBranchAddress("NPhoton", &NPhoton, &b_NPhoton);
+   fChain->SetBranchAddress("Photon_Px", Photon_Px, &b_Photon_Px);
+   fChain->SetBranchAddress("Photon_Py", Photon_Py, &b_Photon_Py);
+   fChain->SetBranchAddress("Photon_Pz", Photon_Pz, &b_Photon_Pz);
+   fChain->SetBranchAddress("Photon_E", Photon_E, &b_Photon_E);
+   fChain->SetBranchAddress("Photon_Iso", Photon_Iso, &b_Photon_Iso);
+   fChain->SetBranchAddress("MET_px", &MET_px, &b_MET_px);
+   fChain->SetBranchAddress("MET_py", &MET_py, &b_MET_py);
+   fChain->SetBranchAddress("MChadronicBottom_px", &MChadronicBottom_px, &b_MChadronicBottom_px);
+   fChain->SetBranchAddress("MChadronicBottom_py", &MChadronicBottom_py, &b_MChadronicBottom_py);
+   fChain->SetBranchAddress("MChadronicBottom_pz", &MChadronicBottom_pz, &b_MChadronicBottom_pz);
+   fChain->SetBranchAddress("MCleptonicBottom_px", &MCleptonicBottom_px, &b_MCleptonicBottom_px);
+   fChain->SetBranchAddress("MCleptonicBottom_py", &MCleptonicBottom_py, &b_MCleptonicBottom_py);
+   fChain->SetBranchAddress("MCleptonicBottom_pz", &MCleptonicBottom_pz, &b_MCleptonicBottom_pz);
+   fChain->SetBranchAddress("MChadronicWDecayQuark_px", &MChadronicWDecayQuark_px, &b_MChadronicWDecayQuark_px);
+   fChain->SetBranchAddress("MChadronicWDecayQuark_py", &MChadronicWDecayQuark_py, &b_MChadronicWDecayQuark_py);
+   fChain->SetBranchAddress("MChadronicWDecayQuark_pz", &MChadronicWDecayQuark_pz, &b_MChadronicWDecayQuark_pz);
+   fChain->SetBranchAddress("MChadronicWDecayQuarkBar_px", &MChadronicWDecayQuarkBar_px, &b_MChadronicWDecayQuarkBar_px);
+   fChain->SetBranchAddress("MChadronicWDecayQuarkBar_py", &MChadronicWDecayQuarkBar_py, &b_MChadronicWDecayQuarkBar_py);
+   fChain->SetBranchAddress("MChadronicWDecayQuarkBar_pz", &MChadronicWDecayQuarkBar_pz, &b_MChadronicWDecayQuarkBar_pz);
+   fChain->SetBranchAddress("MClepton_px", &MClepton_px, &b_MClepton_px);
+   fChain->SetBranchAddress("MClepton_py", &MClepton_py, &b_MClepton_py);
+   fChain->SetBranchAddress("MClepton_pz", &MClepton_pz, &b_MClepton_pz);
+   fChain->SetBranchAddress("MCleptonPDGid", &MCleptonPDGid, &b_MCleptonPDGid);
+   fChain->SetBranchAddress("MCneutrino_px", &MCneutrino_px, &b_MCneutrino_px);
+   fChain->SetBranchAddress("MCneutrino_py", &MCneutrino_py, &b_MCneutrino_py);
+   fChain->SetBranchAddress("MCneutrino_pz", &MCneutrino_pz, &b_MCneutrino_pz);
+   fChain->SetBranchAddress("NPrimaryVertices", &NPrimaryVertices, &b_NPrimaryVertices);
+   fChain->SetBranchAddress("triggerIsoMu24", &triggerIsoMu24, &b_triggerIsoMu24);
+   fChain->SetBranchAddress("EventWeight", &EventWeight, &b_EventWeight);
+   
+   TotalEvents = 0;
+}
+
+Bool_t MyAnalysis::Notify()
+{
+   // The Notify() function is called when a new file is opened. This
+   // can be either for a new TTree in a TChain or when when a new TTree
+   // is started when using PROOF. It is normally not necessary to make changes
+   // to the generated code, but the routine can be extended by the
+   // user if needed. The return value is currently not used.
+   
+   return kTRUE;
+}
+
+#endif // #ifdef MyAnalysis_cxx
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ cat MyAnalysis.h[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kopen results.pdf 
+[?2004l[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ ex
+[?2004lE1187: Failed to source defaults.vim[?25l[J [?1049h[22;0;0t[>4;2m[?1h=[?2004h[?1004h[1;22r[?12h[?12l[22;2t[22;1t[2;1H▽[6n[2;1H  [3;1HPzz\[0%m[6n[3;1H           [1;1H[>c]11;?[22;1H
+Entering Ex mode.  Type "visual" to go to Normal mode.[?25h
+:P+q436f\P+q6b75\P+q6b64\P+q6b72\P+q6b6c\P+q2332\P+q2334\P+q2569\P+q2a37\P+q6b31\P$q q\[?12$pt[34m^X^X[m?:t[34m^X^X[m[22;7H[K[22;7H:t[34m^X[m[22;5H[K[22;5H:t[22;3H[K[22;3H[22;2H[K[22;2Hvisual
+[27m[23m[29m[m[H[2J[?25l[2;1H[94m~                                                                                           [3;1H~                                                                                           [4;1H~                                                                                           [5;1H~                                                                                           [6;1H~                                                                                           [7;1H~                                                                                           [8;1H~                                                                                           [9;1H~                                                                                           [10;1H~                                                                                           [11;1H~                                                                                           [12;1H~                                                                                           [13;1H~                                                                                           [14;1H~                                                                                           [15;1H~                                                                                           [16;1H~                                                                                           [17;1H~                                                                                           [18;1H~                                                                                           [19;1H~                                                                                           [20;1H~                                                                                           [21;1H~                                                                                           [m[5;38HVIM - Vi IMproved[7;39Hversion 8.2.2121[8;35Hby Bram Moolenaar et al.[9;27HModified by team+vim@tracker.debian.org[10;25HVim is open source and freely distributable[12;35HSponsor Vim development![13;24Htype  :help sponsor[38;5;81m<Enter>[m    for information [15;24Htype  :q[38;5;81m<Enter>[m               to exit         [16;24Htype  :help[38;5;81m<Enter>[m  or  [38;5;81m<F1>[m  for on-line help[17;24Htype  :help version8[38;5;81m<Enter>[m   for version info[1;1H[?25h[?25l[22;1H[1m-- INSERT --[1;1H[?25h[?25l[md[5;38H[94m                 [7;39H                [8;35H                        [9;27H                                       [10;25H                                           [12;35H                        [13;24H                                              [15;24H                                              [16;24H                                              [17;24H                                              [1;2H[?25h[?25l[md[?25h[?25l[1;2H[K[1;2H[?25h[?25l[1;1H[K[1;1H[?25h[38;5;81m^[m [?25l[38;5;81m^X[?25h[?25l[m[2;1H[K[2;1H[?25h[?25l[94m~                                                                                           [1;3H[?25h[?25l[m[1;1H[K[1;1H[?25h[?25l[2;1H[K[2;1H[?25h[?25l[94m~                                                                                           [1;1H[?25h[?25l[m[2;1H[K[2;1H[?25h[?25l [?25h[?25l[?25h[?25l[94m~                                                                                           [1;1H[?25h[?25l[m [?25h[?25l[?25h[?25lı[1;2H[?25h[?25l[1;1H[K[1;1H[?25h[?25lO[?25h[?25l[1;1H[K[1;1H[?25h[22;1H[K[?25l[1;1H[?25h[?25l[22;1H:[?25hq[?25l[97m[41mE37: No write since last change (add ! to override)[1;1H[?25h[?25l[m[22;1H[K[22;1H:[?25hq![?25l[?2004l[>4;m[23;2t[23;1t[?1004l[?2004l[?1l>[?25h[>4;m[?1049l[23;0;0t
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ ls
+[?2004lexample.C  Makefile      MyElectron.C   MyJet.C    MyMuon.C    MyPhoton.h  Plotter.o
+example.o  MyAnalysis.C  MyElectron.h   MyJet.h    MyMuon.h    MyPhoton.o  results_MC.pdf
+[0m[01;32mexample.x[0m  MyAnalysis.h  MyElectron.o   MyJet.o    MyMuon.o    Plotter.C   results.pdf
+[01;34mfiles[0m      MyAnalysis.o  myhistory.log  mylog.txt  MyPhoton.C  Plotter.h
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ ex
+[?2004lE1187: Failed to source defaults.vim[?25l[J [?1049h[22;0;0t[>4;2m[?1h=[?2004h[?1004h[1;22r[?12h[?12l[22;2t[22;1t[2;1H▽[6n[2;1H  [3;1HPzz\[0%m[6n[3;1H           [1;1H[>c]11;?[22;1H
+Entering Ex mode.  Type "visual" to go to Normal mode.[?25h
+:P+q436f\P+q6b75\P+q6b64\P+q6b72\P+q6b6c\P+q2332\P+q2334\P+q2569\P+q2a37\P+q6b31\P$q q\[?12$pt[22;2H[K[22;2Hq!
+[?2004l[>4;m[23;2t[23;1t[?1004l[?2004l[?1l>[>4;m[?1049l[23;0;0t
+[?2004h]0;ibeuler@linux: ~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[01;32mibeuler@linux[00m:[01;34m~/Desktop/DAMLA_LAB/ttbar_analysis/HEPTutorial[00m$ exlsexit
+[?2004lexit
+
+Script done on 2025-03-24 00:10:19+03:00 [COMMAND_EXIT_CODE="1"]
