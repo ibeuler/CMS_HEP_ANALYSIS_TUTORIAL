@@ -30,8 +30,6 @@
 
 using namespace std;
 
-TH1F* h_muonMultiplicity;
-TH1F* h_invariantMassEx1;
 void MyAnalysis::BuildEvent() {
    
    Muons.clear();
@@ -99,15 +97,11 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    histograms.push_back(h_Mmumu);
    histograms_MC.push_back(h_Mmumu);
    
-   h_NMuon = new TH1F("NMuon", "Number of muons", 10, 0, 4);
+   h_NMuon = new TH1F("NMuon", "Number of muons", 7, 0, 7);
    h_NMuon->SetXTitle("No. Muons");
    h_NMuon->Sumw2();
    histograms.push_back(h_NMuon);
    histograms_MC.push_back(h_NMuon);
-
-   h_muonMultiplicity = new TH1F("MuonMultiplicity", "Muon Multiplicity;Number of Isolated Muons;Events", 10, 0, 4);
-   histograms.push_back(h_muonMultiplicity);
-   histograms_MC.push_back(h_muonMultiplicity);
    
 }
 
@@ -166,33 +160,26 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
    
    //////////////////////////////
    // Exercise 1: Invariant Di-Muon mass
+   
    int N_IsoMuon = 0;
-   std::vector<MyMuon*> isolatedMuons;
+   MyMuon *muon1, *muon2;
+   
    for (vector<MyMuon>::iterator jt = Muons.begin(); jt != Muons.end(); ++jt) {
       if (jt->IsIsolated(MuonRelIsoCut)) {
          ++N_IsoMuon;
-         isolatedMuons.push_back(&(*jt));
-      }
-   }
-   h_muonMultiplicity->Fill(N_IsoMuon, EventWeight);
-   
-   // number of all muons
-   h_NMuon->Fill(Muons.size(), EventWeight);
-
-   std::vector<MyMuon*> invariantMuonmassPairs;
-   for (size_t i = 0; i < isolatedMuons.size(); ++i) {
-      for (size_t j = i+1; j < isolatedMuons.size(); ++j) {
-         if (isolatedMuons[i]->GetCharge() != isolatedMuons[j]->GetCharge()) {
-            // Calculate di-muon invariant mass using TLorentzVector addition
-            double invMass = (*isolatedMuons[i] + *isolatedMuons[j]).M();
-            h_Mmumu->Fill(invMass, EventWeight);
-            invariantMuonmassPairs.push_back(isolatedMuons[i]);
-            invariantMuonmassPairs.push_back(isolatedMuons[j]);
-         }
+         if (N_IsoMuon == 1) muon1 = &(*jt);
+         if (N_IsoMuon == 2) muon2 = &(*jt);
       }
    }
    
+   h_NMuon->Fill(N_IsoMuon, EventWeight);
    
+   if (N_IsoMuon > 1 && triggerIsoMu24) {
+      if (muon1->Pt()>MuonPtCut) {
+         h_Mmumu->Fill((*muon1 + *muon2).M(), EventWeight);
+      }
+   }
+   //////////////////////////////
    
    return kTRUE;
 }
@@ -201,7 +188,7 @@ void MyAnalysis::SlaveTerminate() {
    // The SlaveTerminate() function is called after all entries or objects
    // have been processed. When running with PROOF SlaveTerminate() is called
    // on each slave server.
-  
+   
 }
 
 void MyAnalysis::Terminate() {

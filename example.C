@@ -78,5 +78,4 @@ int main() {
 	P_MC.AddBg(I->histograms_MC, std::string("single Top"));
    P_MC.Plot(string("results_MC.pdf"));
 
-
 }

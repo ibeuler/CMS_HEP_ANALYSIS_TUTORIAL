@@ -1,14 +1,16 @@
+/*
+ * MyMuon.cpp
+ *
+ *  Created on: Feb 1, 2012
+ *      Author: csander
+ */
+
 #include "MyMuon.h"
-#include <iostream>
 
 MyMuon::MyMuon() {
-    // Constructor: no event data access here!
-    // Maybe initialize counters, histograms, etc.
+   // TODO Auto-generated constructor stub
 }
 
 MyMuon::~MyMuon() {
-    // Destructor: clean up if needed
+   // TODO Auto-generated destructor stub
 }
-
-
-
