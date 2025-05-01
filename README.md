@@ -34,7 +34,7 @@ This repository is designed for personal learning purposes and encourages experi
 
 1. **Clone the repository** and check out the branch for the exercise you want to work on:
    ```bash
-   git checkout exercise-1
+   git checkout exercise1
    ```
 2. **Compile the code** using the provided Makefile:
    ```bash
