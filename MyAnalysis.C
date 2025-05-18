@@ -72,7 +72,7 @@ void MyAnalysis::BuildEvent() {
    lepWl.SetXYZM(MClepton_px, MClepton_py, MClepton_pz, 0.0);
    lepWn.SetXYZM(MCneutrino_px, MCneutrino_py, MCneutrino_pz, 0.0);
    met.SetXYZM(MET_px, MET_py, 0., 0.);
-   
+  
    EventWeight *= weight_factor;
    
 }
@@ -83,7 +83,7 @@ void MyAnalysis::Begin(TTree * /*tree*/) {
    // The tree argument is deprecated (on PROOF 0 is passed).
    
    TString option = GetOption();
-   
+
 }
 
 void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
@@ -99,15 +99,17 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    histograms.push_back(h_Mmumu);
    histograms_MC.push_back(h_Mmumu);
    
-   h_NMuon = new TH1F("NMuon", "Number of muons", 10, 0, 4);
+   h_NMuon = new TH1F("NMuon", "Number of muons", 4, 0, 4);
    h_NMuon->SetXTitle("No. Muons");
    h_NMuon->Sumw2();
    histograms.push_back(h_NMuon);
    histograms_MC.push_back(h_NMuon);
 
-   h_muonMultiplicity = new TH1F("MuonMultiplicity", "Muon Multiplicity;Number of Isolated Muons;Events", 10, 0, 4);
+   h_muonMultiplicity = new TH1F("MuonMultiplicity", "Muon Multiplicity;Number of Isolated Muons;Events", 4, 0, 4);
    histograms.push_back(h_muonMultiplicity);
    histograms_MC.push_back(h_muonMultiplicity);
+   
+
    
 }
 
