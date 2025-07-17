@@ -32,6 +32,14 @@ using namespace std;
 
 TH1F* h_muonMultiplicity;
 TH1F* h_invariantMassEx1;
+TH1F* h_jetMultiplicity;
+TH1F* h_bJetMultiplicity;
+TH1F* h_muonPt;
+TH1F* h_jetPt;
+
+
+
+
 void MyAnalysis::BuildEvent() {
    
    Muons.clear();
@@ -109,8 +117,24 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    histograms.push_back(h_muonMultiplicity);
    histograms_MC.push_back(h_muonMultiplicity);
    
+   h_jetMultiplicity = new TH1F("JetMultiplicity", "Jet Multiplicity;Number of Jets;Events", 4, 0, 4);
+   histograms.push_back(h_jetMultiplicity);
+   histograms_MC.push_back(h_jetMultiplicity);
 
-   
+   h_muonPt = new TH1F("MuonPt", "Muon Pt;Muon Pt [GeV];Events", 100, 0, 300);
+   histograms.push_back(h_muonPt);
+   histograms_MC.push_back(h_muonPt);
+
+   h_jetPt = new TH1F("JetPt", "Jet Pt;Jet Pt [GeV];Events", 100, 0, 300);
+   histograms.push_back(h_jetPt);
+   histograms_MC.push_back(h_jetPt);
+
+   h_bJetMultiplicity = new TH1F("BJetMultiplicity", "b-tagged Jet Multiplicity;N_{b-jets};Events", 10, 0, 10);
+   histograms.push_back(h_bJetMultiplicity);
+   histograms_MC.push_back(h_bJetMultiplicity);
+
+// 
+
 }
 
 Bool_t MyAnalysis::Process(Long64_t entry) {
@@ -193,8 +217,33 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
          }
       }
    }
-   
-   
+   // exersice 2:
+   std::vector<MyJet> btaggedJets;
+   Long64_t numjets = 0;
+   for (vector<MyJet>::iterator it = Jets.begin(); it != Jets.end(); ++it) {
+      
+      if (it->IsBTagged()) {
+         btaggedJets.push_back(*it);
+      }
+      if (it->IsBTagged() && it->IsIsolated(30., 2.5)) {
+         ++numjets;
+      }
+
+   }
+
+   h_jetMultiplicity->Fill(numjets, EventWeight);
+   h_bJetMultiplicity->Fill(btaggedJets.size(), EventWeight);
+
+   for (vector<MyJet>::iterator it = isolatedJets.begin(); it != isolatedJets.end(); ++it) {
+      h_jetPt->Fill(it->Pt(), EventWeight);
+   }
+
+   std::vector<MyMuon*> MuonPt;
+   for (vector<MyMuon>::iterator jt = Muons.begin(); jt != Muons.end(); ++jt) {
+      h_muonPt->Fill(jt->Pt(), EventWeight);
+      MuonPt.push_back(&(*jt));
+   }
+
    
    return kTRUE;
 }
