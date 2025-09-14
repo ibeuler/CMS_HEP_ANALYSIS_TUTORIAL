@@ -27,6 +27,10 @@
 #include <iostream>
 #include <TH1F.h>
 #include <TLatex.h>
+#include <cmath>
+#include "TSystem.h"
+#include "TCanvas.h"
+#include "TString.h" // for Form(...)
 
 using namespace std;
 
@@ -101,37 +105,54 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    
    TString option = GetOption();
    
-   h_Mmumu = new TH1F("Mmumu", "Invariant di-muon mass", 60, 60, 120);
-   h_Mmumu->SetXTitle("m_{#mu#mu}");
+   h_Mmumu = new TH1F("Mmumu", "Invariant di-muon mass; m_{#mu#mu} [GeV]; Events", 60, 60, 120);
    h_Mmumu->Sumw2();
    histograms.push_back(h_Mmumu);
    histograms_MC.push_back(h_Mmumu);
    
-   h_NMuon = new TH1F("NMuon", "Number of muons", 4, 0, 4);
-   h_NMuon->SetXTitle("No. Muons");
+   h_NMuon = new TH1F("NMuon", "Number of muons; No. Muons; Events", 4, 0, 4);
    h_NMuon->Sumw2();
    histograms.push_back(h_NMuon);
    histograms_MC.push_back(h_NMuon);
 
-   h_muonMultiplicity = new TH1F("MuonMultiplicity", "Muon Multiplicity;Number of Isolated Muons;Events", 4, 0, 4);
+   h_muonMultiplicity = new TH1F("MuonMultiplicity", "Muon Multiplicity; Number of Isolated Muons; Events", 4, 0, 4);
    histograms.push_back(h_muonMultiplicity);
    histograms_MC.push_back(h_muonMultiplicity);
    
-   h_jetMultiplicity = new TH1F("JetMultiplicity", "Jet Multiplicity;Number of Jets;Events", 4, 0, 4);
+   h_jetMultiplicity = new TH1F("JetMultiplicity", "Jet Multiplicity; Number of Jets; Events", 4, 0, 4);
    histograms.push_back(h_jetMultiplicity);
    histograms_MC.push_back(h_jetMultiplicity);
 
-   h_muonPt = new TH1F("MuonPt", "Muon Pt;Muon Pt [GeV];Events", 100, 0, 300);
+   h_muonPt = new TH1F("MuonPt", "Muon p_{T}; p_{T}^{#mu} [GeV]; Events", 100, 0, 300);
    histograms.push_back(h_muonPt);
    histograms_MC.push_back(h_muonPt);
 
-   h_jetPt = new TH1F("JetPt", "Jet Pt;Jet Pt [GeV];Events", 100, 0, 300);
+   h_jetPt = new TH1F("JetPt", "Jet p_{T}; p_{T}^{jet} [GeV]; Events", 100, 0, 300);
    histograms.push_back(h_jetPt);
    histograms_MC.push_back(h_jetPt);
 
-   h_bJetMultiplicity = new TH1F("BJetMultiplicity", "b-tagged Jet Multiplicity;N_{b-jets};Events", 10, 0, 10);
+   h_bJetMultiplicity = new TH1F("BJetMultiplicity", "b-tagged Jet Multiplicity; N_{b-jets}; Events", 10, 0, 10);
    histograms.push_back(h_bJetMultiplicity);
    histograms_MC.push_back(h_bJetMultiplicity);
+
+   // Exercise 3: cutflow and MET
+   h_Cutflow = new TH1F("Cutflow", "Cutflow (Exercise 3); Selection Step; Events", 8, 0.5, 8.5);
+   h_Cutflow->Sumw2();
+   h_Cutflow->GetXaxis()->SetBinLabel(1, "All");
+   h_Cutflow->GetXaxis()->SetBinLabel(2, "Trigger");
+   h_Cutflow->GetXaxis()->SetBinLabel(3, "1 Iso Muon");
+   h_Cutflow->GetXaxis()->SetBinLabel(4, "Muon Kin");
+   h_Cutflow->GetXaxis()->SetBinLabel(5, "Ele Veto");
+   h_Cutflow->GetXaxis()->SetBinLabel(6, ">=4 Jets");
+   h_Cutflow->GetXaxis()->SetBinLabel(7, ">=1 b-tag");
+   h_Cutflow->GetXaxis()->SetBinLabel(8, "MET>20");
+   histograms.push_back(h_Cutflow);
+   histograms_MC.push_back(h_Cutflow);
+
+   h_MET = new TH1F("MET", "Missing E_{T} (Exercise 3); E_{T}^{miss} [GeV]; Events", 40, 0, 200);
+   h_MET->Sumw2();
+   histograms.push_back(h_MET);
+   histograms_MC.push_back(h_MET);
 
 // 
 
@@ -157,6 +178,7 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
    // The return value is currently not used.
    
    ++TotalEvents;
+   ++nProcessedEvents;
    
    GetEntry(entry);
    
@@ -164,6 +186,8 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
       cout << "Next event -----> " << TotalEvents << endl;
    
    BuildEvent();
+   // Bookkeeping for cross-section normalization (MC)
+   sumWAll += EventWeight;
    
    double MuonPtCut = 25.;
    double MuonRelIsoCut = 0.10;
@@ -221,21 +245,16 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
    std::vector<MyJet> btaggedJets;
    Long64_t numjets = 0;
    for (vector<MyJet>::iterator it = Jets.begin(); it != Jets.end(); ++it) {
-      
-      if (it->IsBTagged()) {
-         btaggedJets.push_back(*it);
-      }
-      if (it->IsBTagged() && it->IsIsolated(30., 2.5)) {
-         ++numjets;
-      }
-
+      if (it->IsBTagged()) btaggedJets.push_back(*it);
+      if (it->Pt() > 30. && fabs(it->Eta()) < 2.5 && it->GetJetID()) ++numjets;
    }
 
    h_jetMultiplicity->Fill(numjets, EventWeight);
    h_bJetMultiplicity->Fill(btaggedJets.size(), EventWeight);
 
-   for (vector<MyJet>::iterator it = isolatedJets.begin(); it != isolatedJets.end(); ++it) {
-      h_jetPt->Fill(it->Pt(), EventWeight);
+   for (vector<MyJet>::iterator it = Jets.begin(); it != Jets.end(); ++it) {
+      if (it->Pt() > 30. && fabs(it->Eta()) < 2.5 && it->GetJetID())
+         h_jetPt->Fill(it->Pt(), EventWeight);
    }
 
    std::vector<MyMuon*> MuonPt;
@@ -244,7 +263,68 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
       MuonPt.push_back(&(*jt));
    }
 
-   
+   // exercise 3: mu+jets selection, trigger, cutflow, MET
+   auto fill_cut = [&](int bin, double w){ if (h_Cutflow) h_Cutflow->Fill(bin, w); };
+   // 1) all events
+   fill_cut(1, EventWeight);
+
+   // 2) trigger handling
+   bool passTrigger = triggerIsoMu24;
+   double w = EventWeight;
+   if (isData) {
+      if (!passTrigger) return kTRUE;
+   } else {
+      w *= epsilon_trigg_mu; // apply trigger efficiency to MC
+   }
+   fill_cut(2, w);
+
+   // 3) exactly one isolated muon
+   const double muPtCut = 25.0;
+   const double muRelIsoCut = 0.10;
+   std::vector<MyMuon*> goodMu;
+   for (auto &mu : Muons) {
+      if (mu.Pt() > muPtCut && fabs(mu.Eta()) < 2.4 && mu.IsIsolated(muRelIsoCut))
+         goodMu.push_back(&mu);
+   }
+   if (goodMu.size() != 1) return kTRUE;
+   fill_cut(3, w);
+
+   // 4) muon kinematics already applied
+   fill_cut(4, w);
+
+   // 5) electron veto (no isolated e with pT>20)
+   bool vetoEle = false;
+   for (auto &el : Electrons) {
+      double relIso = (el.Pt() > 0.) ? (el.GetIsolation() / el.Pt()) : 999.;
+      if (el.Pt() > 20. && fabs(el.Eta()) < 2.5 && relIso < 0.15) { vetoEle = true; break; }
+   }
+   if (vetoEle) return kTRUE;
+   fill_cut(5, w);
+
+   // 6) at least 4 jets
+   std::vector<MyJet*> selJets;
+   for (auto &j : Jets) {
+      if (j.Pt() > 30. && fabs(j.Eta()) < 2.5 && j.GetJetID()) selJets.push_back(&j);
+   }
+   if (selJets.size() < 4) return kTRUE;
+   fill_cut(6, w);
+
+   // 7) at least 1 b-tag
+   int nb = 0; for (auto j : selJets) if (j->IsBTagged()) ++nb;
+   if (nb < 1) return kTRUE;
+   fill_cut(7, w);
+
+   // 8) MET > 20 GeV
+   double met_pt = sqrt(MET_px*MET_px + MET_py*MET_py);
+   if (met_pt < 20.) return kTRUE;
+   fill_cut(8, w);
+   if (h_MET) h_MET->Fill(met_pt, w);
+
+   sumWSelected += w;
+   ++nSelected;
+
+
+
    return kTRUE;
 }
 
@@ -260,4 +340,39 @@ void MyAnalysis::Terminate() {
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
    
+   // Create results directory
+   const char *outdir = "results";
+   gSystem->Exec(Form("mkdir -p %s", outdir));
+
+   // Helper to draw and save a histogram with a visible main title
+   auto drawAndSave = [&](TH1* h){
+      if (!h) return;
+      TCanvas c;
+      c.cd();
+      // Use the histogram title for axis labels; also draw a visible title above
+      TString fullTitle = h->GetTitle();
+      // In ROOT, title string format is "MainTitle;X;Y". We'll extract the main title
+      TString mainTitle = fullTitle;
+      if (fullTitle.Contains(";")) mainTitle = fullTitle(0, fullTitle.First(";"));
+      h->Draw();
+      // Draw a TLatex at NDC coordinates for a clear main title
+      TLatex latex;
+      latex.SetNDC();
+      latex.SetTextFont(42);
+      latex.SetTextSize(0.04);
+      latex.DrawLatex(0.15, 0.93, mainTitle);
+      // Save
+      TString filename = Form("%s/%s.png", outdir, h->GetName());
+      c.SaveAs(filename);
+   };
+
+   // Save all histograms we created in SlaveBegin
+   for (auto h : histograms) drawAndSave(h);
+
+   // Also save MC histograms collection if different
+   for (auto h : histograms_MC) {
+      // avoid double saving same pointers
+      if (std::find(histograms.begin(), histograms.end(), h) == histograms.end()) drawAndSave(h);
+   }
+
 }

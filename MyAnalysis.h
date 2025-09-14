@@ -15,6 +15,7 @@
 #include <TH1F.h>
 #include <TLorentzVector.h>
 #include <vector>
+#include <cmath>
 
 #include "MyJet.h"
 #include "MyMuon.h"
@@ -183,12 +184,26 @@ public:
    
    float weight_factor;
    float SF_b;
+   bool isData = false;          // flag to treat dataset as Data (apply trigger requirement instead of weight)
+   double epsilon_trigg_mu = 0.95; // simple trigger efficiency placeholder for IsoMu24
+   
+   // Exercise 3 bookkeeping
+   double sumWAll = 0.0;       // sum of weights for all events (MC normalization)
+   double sumWSelected = 0.0;  // sum of weights for events passing selection
+   Long64_t nSelected = 0;     // raw selected events (useful for data counting)
+   Long64_t nProcessedEvents = 0; // raw processed events (for efficiency)
    
    TH1F *h_Mmumu;
    TH1F *h_NMuon;
+   TH1F *h_Cutflow;  // cut-by-cut event counts
+   TH1F *h_MET;      // MET distribution for selected events
    
    vector<TH1F*> histograms;
    vector<TH1F*> histograms_MC;
+   
+   // Simple configuration helpers
+   void SetIsData(bool v) { isData = v; }
+   void SetTriggerEff(double e) { epsilon_trigg_mu = e; }
    
 };
 

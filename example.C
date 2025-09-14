@@ -10,49 +10,69 @@ int main() {
    float lumi = 50.;
    
    MyAnalysis *A = new MyAnalysis();
+   A->SetIsData(true);
    TChain* ch = new TChain("events");
    ch->Add("files/data.root");
    ch->Process(A);
    
    MyAnalysis *B = new MyAnalysis();
+   B->SetIsData(false);
    TChain* ch2 = new TChain("events");
    ch2->Add("files/ttbar.root");
    ch2->Process(B);
    
    MyAnalysis *C = new MyAnalysis();
+   C->SetIsData(false);
    TChain* ch3 = new TChain("events");
    ch3->Add("files/wjets.root");
    ch3->Process(C);
    
    MyAnalysis *D = new MyAnalysis();
+   D->SetIsData(false);
    TChain* ch4 = new TChain("events");
    ch4->Add("files/dy.root");
    ch4->Process(D);
    
    MyAnalysis *E = new MyAnalysis();
+   E->SetIsData(false);
    TChain* ch5 = new TChain("events");
    ch5->Add("files/ww.root");
    ch5->Process(E);
 
    MyAnalysis *F = new MyAnalysis();
+   F->SetIsData(false);
    TChain* ch6 = new TChain("events");
    ch6->Add("files/wz.root");
    ch6->Process(F);
 
    MyAnalysis *G = new MyAnalysis();
+   G->SetIsData(false);
    TChain* ch7 = new TChain("events");
    ch7->Add("files/zz.root");
    ch7->Process(G);
 
    MyAnalysis *H = new MyAnalysis();
+   H->SetIsData(false);
    TChain* ch8 = new TChain("events");
    ch8->Add("files/qcd.root");
    ch8->Process(H);
    
    MyAnalysis *I = new MyAnalysis();
+   I->SetIsData(false);
    TChain* ch9 = new TChain("events");
    ch9->Add("files/single_top.root");
    ch9->Process(I);
+
+   // Simple cross-section estimate for ttbar using selected data minus backgrounds divided by lumi
+   double Ndata = A->nSelected; // selected events in data
+   double Nbkg = C->sumWSelected + D->sumWSelected + E->sumWSelected + F->sumWSelected + G->sumWSelected + H->sumWSelected + I->sumWSelected;
+   double Ntt_est = Ndata - Nbkg;
+   if (Ntt_est < 0) Ntt_est = 0; // avoid negative due to fluctuations
+   double sigma_ttbar_est = (lumi > 0) ? (Ntt_est / lumi) : 0; // in arbitrary units (events per pb^-1 if lumi in pb^-1)
+   std::cout << "[Exercise 3] Selected events (data): " << Ndata << std::endl;
+   std::cout << "[Exercise 3] SumW selected (background MC): " << Nbkg << std::endl;
+   std::cout << "[Exercise 3] Estimated ttbar events: " << Ntt_est << std::endl;
+   std::cout << "[Exercise 3] Estimated ttbar cross-section: " << sigma_ttbar_est << std::endl;
 
 	Plotter P;
 	P.SetData(A->histograms, std::string("Data"));
