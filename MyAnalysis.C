@@ -40,6 +40,9 @@ TH1F* h_jetMultiplicity;
 TH1F* h_bJetMultiplicity;
 TH1F* h_muonPt;
 TH1F* h_jetPt;
+TH1F* h_WjjMass;
+TH1F* h_TopMass;
+TH1F* h_Chi2Top;
 
 
 
@@ -131,7 +134,7 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    histograms.push_back(h_jetPt);
    histograms_MC.push_back(h_jetPt);
 
-   h_bJetMultiplicity = new TH1F("BJetMultiplicity", "b-tagged Jet Multiplicity; N_{b-jets}; Events", 10, 0, 10);
+   h_bJetMultiplicity = new TH1F("BJetMultiplicity", "b-tagged Jet Multiplicity; N_{b-jets}; Events", 4, 0, 4);
    histograms.push_back(h_bJetMultiplicity);
    histograms_MC.push_back(h_bJetMultiplicity);
 
@@ -153,6 +156,21 @@ void MyAnalysis::SlaveBegin(TTree * /*tree*/) {
    h_MET->Sumw2();
    histograms.push_back(h_MET);
    histograms_MC.push_back(h_MET);
+
+   h_WjjMass = new TH1F("WjjMass", "Hadronic W candidate mass (Exercise 4); m_{jj} [GeV]; Events", 40, 0, 200);
+   h_WjjMass->Sumw2();
+   histograms.push_back(h_WjjMass);
+   histograms_MC.push_back(h_WjjMass);
+
+   h_TopMass = new TH1F("TopMass", "Hadronic top candidate mass (Exercise 4); m_{bjj} [GeV]; Events", 50, 0, 300);
+   h_TopMass->Sumw2();
+   histograms.push_back(h_TopMass);
+   histograms_MC.push_back(h_TopMass);
+
+   h_Chi2Top = new TH1F("Chi2TopReco", "Top reconstruction #chi^{2} (Exercise 4); #chi^{2}; Events", 50, 0, 25);
+   h_Chi2Top->Sumw2();
+   histograms.push_back(h_Chi2Top);
+   histograms_MC.push_back(h_Chi2Top);
 
 // 
 
@@ -319,6 +337,48 @@ Bool_t MyAnalysis::Process(Long64_t entry) {
    if (met_pt < 20.) return kTRUE;
    fill_cut(8, w);
    if (h_MET) h_MET->Fill(met_pt, w);
+
+   // Exercise 4: hadronic W and top reconstruction
+   std::vector<MyJet*> bJets;
+   std::vector<MyJet*> lightJets;
+   for (auto jet : selJets) {
+      if (jet->IsBTagged()) bJets.push_back(jet);
+      else lightJets.push_back(jet);
+   }
+
+   if (bJets.size() >= 1 && lightJets.size() >= 2) {
+      const double mW_ref = 80.4;
+      const double mTop_ref = 172.5;
+      const double sigmaW = 10.0;
+      const double sigmaTop = 20.0;
+
+      double bestChi2 = 1e12;
+      double bestMjj = -1.0;
+      double bestMtop = -1.0;
+
+      for (size_t i = 0; i < lightJets.size(); ++i) {
+         for (size_t j = i + 1; j < lightJets.size(); ++j) {
+            TLorentzVector wCand = *lightJets[i] + *lightJets[j];
+            double mjj = wCand.M();
+            for (auto bjet : bJets) {
+               TLorentzVector topCand = wCand + *bjet;
+               double mtop = topCand.M();
+               double chi2 = std::pow((mjj - mW_ref) / sigmaW, 2) + std::pow((mtop - mTop_ref) / sigmaTop, 2);
+               if (chi2 < bestChi2) {
+                  bestChi2 = chi2;
+                  bestMjj = mjj;
+                  bestMtop = mtop;
+               }
+            }
+         }
+      }
+
+      if (bestChi2 < 1e11) {
+         if (h_WjjMass)  h_WjjMass->Fill(bestMjj, w);
+         if (h_TopMass)  h_TopMass->Fill(bestMtop, w);
+         if (h_Chi2Top)  h_Chi2Top->Fill(bestChi2, w);
+      }
+   }
 
    sumWSelected += w;
    ++nSelected;
